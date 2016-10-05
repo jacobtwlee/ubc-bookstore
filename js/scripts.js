@@ -4,6 +4,10 @@ var cart = {}
 var products = {}
 var inactiveTime = 0;
 
+function showCart(){
+    window.alert("Your cart contains: \n" + JSON.stringify(products, null, 2));
+}
+
 function addToCart(productName) {
     inactiveTime = 0; // reset the timer
   
