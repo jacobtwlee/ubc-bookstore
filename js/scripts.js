@@ -4,7 +4,9 @@ var cart = {}
 var products = {}
 var inactiveTime = 0;
 
-function addToCart(productName) {    
+function addToCart(productName) {
+    inactiveTime = 0; // reset the timer
+  
     if (products[productName] > 0) {
         if (cart[productName]) {
             cart[productName] += 1;
@@ -19,7 +21,9 @@ function addToCart(productName) {
     }
 }
 
-function removeFromCart(productName) {    
+function removeFromCart(productName) {
+    inactiveTime = 0; // reset the timer
+    
     if (cart[productName] && cart[productName] > 0) {
         cart[productName] -= 1;
         products[productName] += 1;
@@ -32,6 +36,17 @@ function removeFromCart(productName) {
     } else {
         alert("Couldn't remove " + productName + " from cart (does not exist in cart)");
     }
+}
+
+function checkTimer() {
+    var timeout = 30;
+    
+    if (inactiveTime > timeout) {
+        alert("Hey there! Are you still planning to buy something?");
+        inactiveTime = 0;
+    }
+    
+    inactiveTime += 1;
 }
 
 (function setup() {
@@ -47,4 +62,6 @@ function removeFromCart(productName) {
         /* Initialize the quanity of each product */
         products[productName] = maxQuantity;
     }
+    
+    window.setInterval(checkTimer, 1000);
 })();
