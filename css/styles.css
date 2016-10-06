@@ -116,7 +116,6 @@ body {
 }
 
 .product:hover {
-    cursor: pointer;
     background-color: #E6E6E6;
 }
 
@@ -166,12 +165,12 @@ body {
     width: 30%;
     padding: 10px;
     border-radius: 3px;
-    opacity: 0.9;
+    cursor: pointer;
 }
 
 .cartButton.add {
     left: 7%;
-    background-color: #8ebb1b;
+    background-color: #4CAF50;
 }
 
 .cartButton.remove {
@@ -179,17 +178,35 @@ body {
     background-color: #b31d1d;
 }
 
-.cartButton:hover {
-    opacity: 1;
+.cartButton.add:hover {
+    background-color: #5DC162;
+}
+
+.cartButton.remove:hover {
+    background-color: #C52B2B;
 }
 
 #showCartButton{
-    position: absolute;
+    position: fixed;
     right: 30px;
     background-color: #4CAF50; /* Green */
-    border: none;
     color: white;
     padding: 15px 15px;
     text-align: center;
-    text-decoration: none;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    z-index: 1000;
+    line-height: 16px;
+    font-size: 12px;
+}
+
+#showCartButton:hover {
+    background-color: #5DC162;
+}
+
+.cartIcon {
+    position: relative;
+    height: 16px;
+    top: 2px;
 }

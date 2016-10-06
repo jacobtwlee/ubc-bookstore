@@ -5,7 +5,16 @@ var products = {}
 var inactiveTime = 0;
 
 function showCart(){
-    window.alert("Your cart contains: \n" + JSON.stringify(products, null, 2));
+    var cartStr = "";
+    
+    for (var productName in cart) {
+        cartStr += productName + ": " + cart[productName] + "\n";
+    }
+    
+    cartStr = cartStr || "Cart is empty.";
+    
+    window.alert("Cart contents: \n\n" + cartStr);
+    inactiveTime = 0;
 }
 
 function addToCart(productName) {
