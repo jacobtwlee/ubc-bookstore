@@ -87,7 +87,8 @@ function updateCartPrice() {
 
 // Show the modal with the cart contents
 function showModal() {
-    $("#modalContainer").show()
+    setInactiveTime(0); // Reset the timer
+    $("#modalContainer").show();
 }
 
 // Hide the modal with the cart contents
