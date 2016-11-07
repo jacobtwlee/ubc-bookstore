@@ -9,6 +9,24 @@
 var cart = {}
 var products = {}
 var inactiveTime = 0;
+var productData = {};
+
+//cors request for ajax
+function corsRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  console.log("connecting to server...");
+  if ("withCredentials" in xhr) { //if the XMLHttpRequest object has a "withCredentials" property
+    xhr.open(method, url, true);
+  } 
+  else if (typeof XDomainRequest != "undefined") { //if XDomainRequest (only for IE)
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+  } 
+  else { //cors not supported
+    xhr = null;
+  }
+  return xhr;
+}
 
 // Adds a product to the global cart and adjusts its quantity in the global products
 function addToCart(productName) {
@@ -133,7 +151,40 @@ function updateCartModal(productName) {
 }
 
 // Initialize cart and product features
-(function setup() {    
+(function setup() {
+    var url = "https://cpen400a.herokuapp.com/products";
+    var xhr = corsRequest("GET", url );
+    xhr.onload = function() {
+         var responseText = xhr.responseText;
+         var tempString = responseText.toString();
+         productData = JSON.parse(tempString);
+         console.log(productData);
+         //productData = responseText;
+    };
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {                //Response from server completely loaded
+            if (xhr.status == 200 && xhr.status < 300)  //200 to 299 are all successful
+                console.log("connection success");
+            else if(xhr.status == 500){
+                console.log("internal server error");
+                setTimeout(corsRequest("GET", url), 1000);
+            }
+        }
+    }
+
+    xhr.onerror = function() {
+        console.log('error in AJAX request');
+        setTimeout(corsRequest("GET", url), 1000);
+    };
+
+    xhr.ontimeout = function() {
+        console.log("Timed out after " + xhr.timeout + " ms");
+        setTimeout(corsRequest("GET", url), 1000);
+    }
+
+    xhr.send();
+    xhr.timeout = 5000;    
     var $products = $("#productList");
     
     for (var product in productData) {
