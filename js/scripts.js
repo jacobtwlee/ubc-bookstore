@@ -10,6 +10,7 @@ var cart = {}
 var products = {}
 var inactiveTime = 0;
 var productData = {};
+var url = "https://cpen400a.herokuapp.com/products";
 
 //cors request for ajax
 function corsRequest(method, url) {
@@ -26,6 +27,48 @@ function corsRequest(method, url) {
     xhr = null;
   }
   return xhr;
+}
+
+//promise for ajax call
+function loadProductData(url){
+    return new Promise (function(resolve,reject){
+        var xhr = corsRequest("GET", url );
+        xhr.onload = function() {
+             var responseText = xhr.responseText;
+             var tempString = responseText.toString();
+             productData = JSON.parse(tempString);
+             console.log(productData);
+             resolve(productData);
+             //productData = responseText;
+             //console.log(responseText);
+        }
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {                //Response from server completely loaded
+                if (xhr.status == 200 && xhr.status < 300)  //200 to 299 are all successful
+                    console.log("connection success");
+                else if(xhr.status == 500){
+                    console.log("internal server error");
+                    setTimeout(corsRequest("GET", url), 1000);
+                }
+            }
+        }
+
+        xhr.onerror = function() {
+            console.log('error in AJAX request');
+            setTimeout(corsRequest("GET", url), 1000);
+            reject(Error('error in Ajax request'));
+        };
+
+        xhr.ontimeout = function() {
+            console.log("Timed out after " + xhr.timeout + " ms");
+            setTimeout(corsRequest("GET", url), 1000);
+            reject(Error('request timed out'));
+        }
+
+        xhr.send(); //send ajax request
+        xhr.timeout = 5000; //timeout is 5 seconds
+    });
 }
 
 // Adds a product to the global cart and adjusts its quantity in the global products
@@ -151,66 +194,37 @@ function updateCartModal(productName) {
 }
 
 // Initialize cart and product features
-(function setup() {
-    var url = "https://cpen400a.herokuapp.com/products";
-    var xhr = corsRequest("GET", url );
-    xhr.onload = function() {
-         var responseText = xhr.responseText;
-         var tempString = responseText.toString();
-         productData = JSON.parse(tempString);
-         console.log(productData);
-         //productData = responseText;
-    };
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {                //Response from server completely loaded
-            if (xhr.status == 200 && xhr.status < 300)  //200 to 299 are all successful
-                console.log("connection success");
-            else if(xhr.status == 500){
-                console.log("internal server error");
-                setTimeout(corsRequest("GET", url), 1000);
-            }
-        }
-    }
-
-    xhr.onerror = function() {
-        console.log('error in AJAX request');
-        setTimeout(corsRequest("GET", url), 1000);
-    };
-
-    xhr.ontimeout = function() {
-        console.log("Timed out after " + xhr.timeout + " ms");
-        setTimeout(corsRequest("GET", url), 1000);
-    }
-
-    xhr.send();
-    xhr.timeout = 5000;    
+(function setup() {    
     var $products = $("#productList");
     
-    for (var product in productData) {
-        // Initialize the product in our products global variable
-        products[product] = {
-            "quantity": productData[product].quantity,
-            "price": productData[product].price
+    //surrounded setup with a promise
+    loadProductData(url).then(function(result){
+        for (var product in productData) {
+            // Initialize the product in our products global variable
+            products[product] = {
+                "quantity": productData[product].quantity,
+                "price": productData[product].price
+            }
+            
+            // Render the product HTML and add it to the DOM
+            var productTemplate = templates.product({
+                productName: product,
+                productPrice: productData[product].price,
+                productImage: productData[product].url
+            });
+            
+            var $product = $(productTemplate).appendTo($products);
+            
+            // Add the click handlers for the add/remove buttons
+            $product.find(".cartButton.add").on("click", addToCart.bind(null, product));
+            $product.find(".cartButton.remove").on("click", removeFromCart.bind(null, product));
+            
+            // We initially hide the remove button until the user adds that item to the cart
+            $product.find(".cartButton.remove").hide();
         }
-        
-        // Render the product HTML and add it to the DOM
-        var productTemplate = templates.product({
-            productName: product,
-            productPrice: productData[product].price,
-            productImage: productData[product].url
-        });
-        
-        var $product = $(productTemplate).appendTo($products);
-        
-        // Add the click handlers for the add/remove buttons
-        $product.find(".cartButton.add").on("click", addToCart.bind(null, product));
-        $product.find(".cartButton.remove").on("click", removeFromCart.bind(null, product));
-        
-        // We initially hide the remove button until the user adds that item to the cart
-        $product.find(".cartButton.remove").hide();
-    }
-    
+    }, function(err){
+        console.log("error loading products");
+    });
     // Add the click handlers for the modal show/hide buttons
     $("#showCartButton").on("click", showModal);
     $("#modalContainer .modalCloseButton").on("click", hideModal);
