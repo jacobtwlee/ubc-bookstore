@@ -5,33 +5,93 @@
 */
 
 
-var templates = {
-    product: _.template("".concat(
-        '<div data-product="<%= productName %>" class="product">',
-            '<div class="productImageContainer">',
-                '<div class="productCart">',
-                    '<div class="cartButton add">Add</div>',
-                    '<div class="cartButton remove">Remove</div>',
-                '</div>',
-                '<img class="productImage" src="<%- productImage %>">',
-                '<div class="productPrice">$<%- productPrice %></div>',
-            '</div>',
-            '<div class="productName"><%- productName %></div>',
-        '</div>'    
-    )),
+var templates = {    
+    product: function (props) {
+        /* Create nodes */
+        
+        var product = document.createElement("div");
+        product.setAttribute("class", "product");
+        product.setAttribute("data-product", props.productName);
+        
+        var productImageContainer = document.createElement("div");
+        productImageContainer.setAttribute("class", "productImageContainer");
+        
+        var productCart = document.createElement("div");
+        productCart.setAttribute("class", "productCart");
+        
+        var cartButtonAdd = document.createElement("div");
+        cartButtonAdd.setAttribute("class", "cartButton add");
+        cartButtonAdd.appendChild(document.createTextNode("Add"));
+        
+        var cartButtonRemove = document.createElement("div");
+        cartButtonRemove.setAttribute("class", "cartButton remove");
+        cartButtonRemove.appendChild(document.createTextNode("Remove"));
+        
+        var productImage = document.createElement("img");
+        productImage.setAttribute("class", "productImage");
+        productImage.setAttribute("src", props.productImage);
+        
+        var productPrice = document.createElement("div");
+        productPrice.setAttribute("class", "productPrice");
+        productPrice.appendChild(document.createTextNode("$" + props.productPrice));
+        
+        var productName = document.createElement("div");
+        productName.setAttribute("class", "productName");
+        productName.appendChild(document.createTextNode(props.productName));
+        
+        /* Link nodes together */
+        
+        product.appendChild(productImageContainer);
+        productImageContainer.appendChild(productCart);
+        productCart.appendChild(cartButtonAdd);
+        productCart.appendChild(cartButtonRemove);
+        productImageContainer.appendChild(productImage);
+        productImageContainer.appendChild(productPrice);
+        product.appendChild(productName);
+        
+        return product;
+    },
     
-    cartEntry: _.template("".concat(
-        '<tr data-product="<%= productName %>" class="">',
-            '<td><%- productName %></td>',
-            '<td>',
-                '<span class="cartQuantity"><%- productQuantity %></span>',
-                ' ',
-                '<span class="modalCartButton add">+</span>',
-                '<span class="modalCartButton remove">-</span>',
-            '</td>',
-            '<td>',
-                '$<span class="productTotal"><%- productPrice %></span>',
-            '</td>',
-        '</tr>'
-    ))
+    cartEntry: function (props) {
+        /* Create nodes */
+        
+        var tableRow = document.createElement("tr");
+        tableRow.setAttribute("data-product", props.productName);
+        
+        var cell1 = document.createElement("td");
+        cell1.appendChild(document.createTextNode(props.productName));
+        
+        var cell2 = document.createElement("td");
+        
+        var cartQty = document.createElement("span");
+        cartQty.setAttribute("class", "cartQuantity");
+        cartQty.appendChild(document.createTextNode(props.productQuantity));
+        
+        var modalCartButtonAdd = document.createElement("span");
+        modalCartButtonAdd.setAttribute("class", "modalCartButton add");
+        modalCartButtonAdd.appendChild(document.createTextNode("+"));
+        
+        var modalCartButtonRemove = document.createElement("span");
+        modalCartButtonRemove.setAttribute("class", "modalCartButton remove");
+        modalCartButtonRemove.appendChild(document.createTextNode("-"));
+        
+        var cell3 = document.createElement("td");
+        
+        var productTotal = document.createElement("span");
+        productTotal.setAttribute("class", "productTotal");
+        productTotal.appendChild(document.createTextNode(props.productPrice));
+        
+        /* Link nodes together */
+        
+        tableRow.appendChild(cell1);
+        tableRow.appendChild(cell2);
+        cell2.appendChild(cartQty);
+        cell2.appendChild(document.createTextNode(" "));
+        cell2.appendChild(modalCartButtonAdd);
+        cell2.appendChild(modalCartButtonRemove);
+        tableRow.appendChild(cell3);
+        cell3.appendChild(productTotal);
+
+        return tableRow;
+    },
 };

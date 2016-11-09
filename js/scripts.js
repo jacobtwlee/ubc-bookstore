@@ -10,83 +10,44 @@ var cart = {}
 var products = {}
 var inactiveTime = 0;
 var productData = {};
-var url = "https://cpen400a.herokuapp.com/products";
+var apiUrl = "https://cpen400a.herokuapp.com/products";
 
-
-//cors request for ajax
-function corsRequest(method, url) {
-  var xhr = new XMLHttpRequest();
-  console.log("connecting to server...");
-  if ("withCredentials" in xhr) { //if the XMLHttpRequest object has a "withCredentials" property
-        xhr.open(method, url, true);
-        console.log("opening"); //failing here
-        if (xhr.status != 200){
-            console.log("failed to open");
-            var retries = 0;
-            while (retries <5){
-                xhr.open(method, url, true);
-                console.log("retrying " + retries);
-                retries = retries + 1;
+function loadProductData (url) {
+    return new Promise (function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        var maxAttempts = 5;
+        var attempts = 0;
+        
+        var tryRequest = function () {
+            if (attempts < maxAttempts) {
+                attempts += 1;
+                xhr.timeout = 5000;
+                xhr.open("GET", url);
+                xhr.send();
+            } else {
+                reject("Failed to retrieve products after " + attempts + " attempts.");
             }
-            console.log("failed and stopped trying");
-        }
-  } 
-  else if (typeof XDomainRequest != "undefined") { //if XDomainRequest (only for IE)
-    xhr = new XDomainRequest();
-    xhr.open(method, url);
-  } 
-  else { //cors not supported
-    xhr = null;
-  }
-  return xhr;
-}
-
-//promise for ajax call
-function loadProductData(url){
-    return new Promise (function(resolve,reject){
-        var xhr = corsRequest("GET", url );
-        xhr.onload = function() {
-                console.log("got to xhr.onload");
-                if (xhr.status == 200){  //200 to 299 are all successful
-                    console.log("connection success");
-                    retries = 0;
-                    try {
-                         var responseText = xhr.responseText;
-                         var tempString = responseText.toString();
-                         console.log(responseText);
-                         productData = JSON.parse(tempString);
-                         console.log(productData);
-                         resolve(productData);
-                    } catch(e) {
-                       // not valid JSON
-                       console.log("not valid json");
-                       setTimeout(corsRequest("GET", url), 1000);
-                    }
-
-                     //resolve(responseText);
+        };
+        
+        xhr.onload = function () {
+            if (xhr.status == 200) {
+                try {
+                    var productData = JSON.parse(xhr.responseText);
+                    resolve(productData);
+                } catch (e) {
+                   console.log("Error parsing JSON response");
+                   tryRequest();
                 }
-                else{
-                    console.log("internal server error");
-                    setTimeout(corsRequest("GET", url), 1000);
-                }
-            
-        }
-
-
-        xhr.onerror = function() {
-            console.log('error in AJAX request');
-            setTimeout(corsRequest("GET", url), 1000);
-            reject(Error('error in Ajax request'));
+            } else {
+                tryRequest();
+            }
         };
 
-        xhr.ontimeout = function() {
-            console.log("Timed out after " + xhr.timeout + " ms");
-            setTimeout(corsRequest("GET", url), 1000);
-            reject(Error('request timed out'));
-        }
-
-        xhr.send(); //send ajax request
-        xhr.timeout = 5000; //timeout is 5 seconds
+        xhr.onerror = tryRequest;
+        xhr.ontimeout = tryRequest;
+        
+        // Start the first request
+        tryRequest();
     });
 }
 
@@ -216,8 +177,7 @@ function updateCartModal(productName) {
 (function setup() {    
     var $products = $("#productList");
     
-    //surrounded setup with a promise
-    loadProductData(url).then(function(result){
+    loadProductData(apiUrl).then(function (productData) {
         for (var product in productData) {
             // Initialize the product in our products global variable
             products[product] = {
@@ -241,9 +201,10 @@ function updateCartModal(productName) {
             // We initially hide the remove button until the user adds that item to the cart
             $product.find(".cartButton.remove").hide();
         }
-    }, function(err){
-        console.log("error loading products");
+    }, function (error) {
+        alert(error);
     });
+    
     // Add the click handlers for the modal show/hide buttons
     $("#showCartButton").on("click", showModal);
     $("#modalContainer .modalCloseButton").on("click", hideModal);
