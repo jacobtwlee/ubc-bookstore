@@ -12,12 +12,24 @@ var inactiveTime = 0;
 var productData = {};
 var url = "https://cpen400a.herokuapp.com/products";
 
+
 //cors request for ajax
 function corsRequest(method, url) {
   var xhr = new XMLHttpRequest();
   console.log("connecting to server...");
   if ("withCredentials" in xhr) { //if the XMLHttpRequest object has a "withCredentials" property
-    xhr.open(method, url, true);
+        xhr.open(method, url, true);
+        console.log("opening"); //failing here
+        if (xhr.status != 200){
+            console.log("failed to open");
+            var retries = 0;
+            while (retries <5){
+                xhr.open(method, url, true);
+                console.log("retrying " + retries);
+                retries = retries + 1;
+            }
+            console.log("failed and stopped trying");
+        }
   } 
   else if (typeof XDomainRequest != "undefined") { //if XDomainRequest (only for IE)
     xhr = new XDomainRequest();
@@ -34,25 +46,32 @@ function loadProductData(url){
     return new Promise (function(resolve,reject){
         var xhr = corsRequest("GET", url );
         xhr.onload = function() {
-             var responseText = xhr.responseText;
-             var tempString = responseText.toString();
-             productData = JSON.parse(tempString);
-             console.log(productData);
-             resolve(productData);
-             //productData = responseText;
-             //console.log(responseText);
-        }
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {                //Response from server completely loaded
-                if (xhr.status == 200 && xhr.status < 300)  //200 to 299 are all successful
+                console.log("got to xhr.onload");
+                if (xhr.status == 200){  //200 to 299 are all successful
                     console.log("connection success");
-                else if(xhr.status == 500){
+                    retries = 0;
+                    try {
+                         var responseText = xhr.responseText;
+                         var tempString = responseText.toString();
+                         console.log(responseText);
+                         productData = JSON.parse(tempString);
+                         console.log(productData);
+                         resolve(productData);
+                    } catch(e) {
+                       // not valid JSON
+                       console.log("not valid json");
+                       setTimeout(corsRequest("GET", url), 1000);
+                    }
+
+                     //resolve(responseText);
+                }
+                else{
                     console.log("internal server error");
                     setTimeout(corsRequest("GET", url), 1000);
                 }
-            }
+            
         }
+
 
         xhr.onerror = function() {
             console.log('error in AJAX request');
