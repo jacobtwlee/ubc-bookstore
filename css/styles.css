@@ -343,8 +343,14 @@ hr {
     background-color: #4CAF50;
     cursor: pointer;
     margin-top: 15px;
+    transition: background-color 0.5s;
 }
 
 .checkoutButton:hover {
     background-color: #5DC162;
+}
+
+.checkoutButton.disabled {
+    background-color: #D6D6D6;
+    pointer-events: none;
 }

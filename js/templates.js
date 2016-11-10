@@ -90,6 +90,7 @@ var templates = {
         cell2.appendChild(modalCartButtonAdd);
         cell2.appendChild(modalCartButtonRemove);
         tableRow.appendChild(cell3);
+        cell3.appendChild(document.createTextNode("$"));
         cell3.appendChild(productTotal);
 
         return tableRow;
