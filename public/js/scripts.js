@@ -9,7 +9,7 @@
 var cart = {}
 var products = {}
 var inactiveTime = 0;
-var apiUrl = "https://cpen400a.herokuapp.com/products";
+var apiUrl = "/products";
 
 // Make an AJAX request to the server to get the product data
 // Returns a promise which the caller can use to get the product data when ready
