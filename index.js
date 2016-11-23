@@ -20,9 +20,22 @@ var initApp = function (db) {
         // get the products collection
         var collection = db.collection('products');
         
-        // find the matching products
-        collection.find({}).toArray(function(error, result) {
+        var filters = {};
+        
+        // check the url parameters and set the query filters
+        
+        if (!isNaN(request.query.minPrice)) {
+            filters.price = filters.price || {};
+            filters.price.$gte = parseFloat(request.query.minPrice);
+        }
+        
+        if (!isNaN(request.query.maxPrice)) {
+            filters.price = filters.price || {};
+            filters.price.$lte = parseFloat(request.query.maxPrice);
+        }
             
+        // find the matching products
+        collection.find(filters).toArray(function(error, result) {
             if (error) {
                 console.log("Error: could not retrieve products.")
                 response.status(500).send("An error occurred, please try again");
