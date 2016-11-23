@@ -1,0 +1,356 @@
+body {
+    width: 1000px;
+    margin: 25px auto;
+    font-family: "helvetica";
+    color: white;
+    background-color: #FAFAFA;
+}
+
+hr {
+    border: 0;
+    height: 2px;
+    background: white;
+}
+
+/* Grid System */
+
+.tableContainer {
+    display: table;
+    width: 100%;
+}
+
+.row {
+    display: table-row;
+}
+
+.col-left {
+    display: table-cell;
+    vertical-align: top;
+    width: 25%;
+}
+
+.col-right {
+    display: table-cell;
+    vertical-align: top;
+    width: 75%;
+}
+
+/* Header */
+
+#header {
+    height: 250px;
+}
+
+#welcomeBanner {
+    background-image: url("../images/banner.jpg");
+    background-size: cover;
+    background-position: center;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: #002145;
+}
+
+#logo {
+    background-image: url("../images/logo.png");
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+    text-align: center;
+    padding: 15px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    background-color: #002145;
+}
+
+/* Navigation Menu */
+
+#navigationMenu {
+    padding: 15px;
+}
+
+#navigationMenu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 15px 0 15px 0;
+}
+
+#navigationMenu ul li {
+    border-radius: 3px;
+    width: 100%;
+    padding:10px 0 10px 0;
+    text-align: center;
+    margin-bottom: 15px;
+    background-color: #002145;
+}
+
+#navigationMenu ul li:hover {
+    cursor: pointer;
+    color: #002145;
+    background-color: #D6D6D6;
+}
+
+/* Products List */
+
+#productList {
+    padding: 15px;
+}
+
+#productList:empty {
+    background-image: url('../images/loading.gif');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.product {
+    float: left;
+    border-radius: 3px;
+    width: calc(100%/3);
+    padding: 15px 15px 0 15px;
+    box-sizing: border-box;
+}
+
+.productImageContainer {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+}
+
+.productImage {
+    width: 100%;
+    height:100%;
+    object-fit: cover;
+}
+
+.productName {
+    color: #002145;
+    padding: 5px;
+    text-align: center;
+}
+
+.product:hover .productPrice {
+    display: block;
+}
+
+.product:hover {
+    background-color: #E6E6E6;
+}
+
+.productPrice {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+    color: white;
+    padding: 5px;
+    background-color: #002145;
+    width: 100%;
+}
+
+/* Footer */
+
+#footer {
+    text-align: center;
+    border-radius: 3px;
+    padding: 15px;
+    background-color: #002145;
+}
+
+/* Cart */
+
+.productCart {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url("../images/cart.png");
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.product:hover .productCart {
+    display: block;
+}
+
+.cartButton {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    width: 30%;
+    padding: 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.cartButton.add {
+    left: 7%;
+    background-color: #4CAF50;
+}
+
+.cartButton.remove {
+    right: 7%;
+    background-color: #b31d1d;
+}
+
+.cartButton.add:hover {
+    background-color: #5DC162;
+}
+
+.cartButton.remove:hover {
+    background-color: #C52B2B;
+}
+
+#showCartButton{
+    position: fixed;
+    right: 30px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 15px 15px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    z-index: 1000;
+    line-height: 16px;
+    font-size: 12px;
+}
+
+#showCartButton:hover {
+    background-color: #5DC162;
+}
+
+.cartIcon {
+    position: relative;
+    height: 16px;
+    top: 2px;
+}
+
+/* Modal */
+
+#modalContainer {
+    display: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 2000;
+}
+
+.modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    background-color: #FAFAFA;
+    border-radius: 3px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    z-index: 2001;
+
+}
+
+.modalContent {
+    color: #002145;
+}
+
+.modalContent table {
+    color: inherit;
+    width: 100%;
+}
+
+.modalContent td:first-child {
+    width: 75%;
+}
+
+.modalCloseButton {
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    width: 24px;
+    height: 24px;
+    color: white;
+    background-color: #002145;
+    border-radius: 50%;
+    border: 2px solid #FAFAFA;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    line-height: 22px;
+    cursor: pointer;
+    z-index: 2002;
+}
+
+.modalCloseButton:hover {
+    background-color: #30445A;
+}
+
+.modalContent hr {
+    border: 0;
+    height: 2px;
+    background: #002145;
+}
+
+/* Cart Table */
+
+.cartTable tr:not(:first-child) {
+    color: #AAA;
+}
+
+.cartTable td:not(:first-child),
+.cartSubtotal {
+    text-align: right;
+}
+
+.modalCartButton {
+    display: inline-block;
+    color: white;
+    width: 16px;
+    line-height: 16px;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+    margin: 2px;
+}
+
+.modalCartButton.add {
+    background-color: #4CAF50;
+}
+
+.modalCartButton.add:hover {
+    background-color: #5DC162;
+}
+
+.modalCartButton.remove {
+    background-color: #b31d1d;
+}
+
+.modalCartButton.remove:hover {
+    background-color: #C52B2B;
+}
+
+.checkoutButton {
+    padding: 15px;
+    border-radius: 3px;
+    color: white;
+    text-align: center;
+    background-color: #4CAF50;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.5s;
+}
+
+.checkoutButton:hover {
+    background-color: #5DC162;
+}
+
+.checkoutButton.disabled {
+    background-color: #D6D6D6;
+    pointer-events: none;
+}
