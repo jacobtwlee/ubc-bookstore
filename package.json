@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "express": "^4.13.3",
+    "body-parser": "1.15.2",
     "mongodb": "^2.2.11"
   },
   "engines": {

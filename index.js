@@ -1,9 +1,11 @@
 var express = require('express')
 var app = express()
 var MongoClient = require('mongodb').MongoClient
+var bodyParser = require('body-parser')
 
 app.set('port', (process.env.PORT || 5000))
 app.use(express.static(__dirname + '/public'))
+app.use(bodyParser.json()) // for parsing application/json
 
 var dburl = "mongodb://localhost:27017/cpen400a_group12";
 
@@ -55,6 +57,42 @@ var initApp = function (db) {
                 response.json(products);
             }
           });
+    });
+    
+    app.post('/checkout', function(request, response) {
+        var errorHandler = function () {
+            console.log("Error: could not place order.");
+            response.status(500).send("An error occurred, please try again");
+        }
+        
+        var ordersCollection = db.collection('orders');
+        var productsCollection = db.collection('products');
+
+        var cart = request.body.cart;
+        var total = request.body.total;
+        
+        if (cart && total) {
+            var doc = {
+                cart: cart,
+                total: total
+            };
+            
+            // add the new order to the orders collection
+            ordersCollection.insert(doc, {}, function (error, result) {
+                if (error) errorHandler();
+            });
+            
+            // for each product in cart update the quantity in products collection
+            for (item in cart) {
+                productsCollection.updateOne({name: item}, {$inc: {quantity: -1 * cart[item]}}, function (error, result) {
+                    if (error) errorHandler();
+                });
+            }
+            
+            response.status(200).send("Checkout successful.");
+        } else {
+            errorHandler();
+        }
     });
 };
 

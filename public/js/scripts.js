@@ -201,68 +201,56 @@ function updateCartModal(productName) {
 
 // Handle checkout logic
 function checkout() {
-    $this = $(this);
+    var $this = $(this);
+    
+    // disable the checkout button until the request completes to prevent
+    // placing the order multiple times
     $this.addClass("disabled");
     
-    loadProductData(apiUrl).then(function (productData) {
-        var priceChanges = [];
-        var quantityChanges = [];
+    var url = "/checkout";
+    var xhr = new XMLHttpRequest();
+    
+    xhr.timeout = 5000;
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    
+    function successHandler() {
+        $this.removeClass("disabled");
+        alert("Checkout complete!");
         
-        var confirmMessage = "";
-        var priceChangeMessage = "The price of the following items has changed:\n";
-        var quantityChangeMessage = "Some items in your cart are no longer available in the quantity selected. The following items have been updated in your cart:\n";
-        
-        for (var product in productData) {            
-            // the price changed
-            if (productData[product].price != products[product].price) {
-                if (product in cart) {
-                    priceChanges.push(product);
-                    priceChangeMessage += "- " + product + ": $" + productData[product].price + "\n"
-                }
-                products[product].price = productData[product].price;
-            }
-            
-            // the quanity changed
-            if (productData[product].quantity < cart[product]) {
-                if (product in cart) {
-                    quantityChanges.push(product);
-                    quantityChangeMessage += "- " + product + ": " + productData[product].quantity + "\n";
-                    cart[product] = productData[product].quantity;
-                }
-                
-                products[product].quantity = productData[product].quantity;
-            }
-            
-            updateProduct(product);
-            updateCartModal(product);
+        // after checkout we remove all items from the user's cart
+        for (item in cart) {
+            delete cart[item];            
+            updateProduct(item);
+            updateCartModal(item);
         }
         
         updateCartPrice();
-                    
-        if (priceChanges.length > 0) {
-            confirmMessage += priceChangeMessage + "\n";
-        }
-        
-        if (quantityChanges.length > 0) {
-            confirmMessage += quantityChangeMessage + "\n";
-        }
-        
-        var cartPrice = getCartPrice();
-        
-        if (cartPrice > 0) {
-            var totalPriceMessage = "The cart total is $" + cartPrice + ". Do you want to continue checkout?";
-            confirmMessage += totalPriceMessage;
-        }
-        
-        confirm(confirmMessage);
-        
-        if (!$.isEmptyObject(cart)) {
-            $this.removeClass("disabled");
-        }
-    }, function (error) {
-        alert(error);
+        hideModal();
+    }
+    
+    function errorHandler() {
         $this.removeClass("disabled");
-    });
+        alert("There was an error during checkout. Please try again.");
+    }
+    
+    xhr.onload = function () {
+        if (xhr.status == 200) {
+            successHandler();
+        } else {
+            errorHandler();
+        }
+    };
+
+    xhr.onerror = errorHandler;
+    xhr.ontimeout = errorHandler;
+    
+    var payload = {
+        cart: cart,
+        total: getCartPrice()
+    }
+    
+    xhr.send(JSON.stringify(payload));
 }
 
 // Initialize cart and product features
