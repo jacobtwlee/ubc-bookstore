@@ -46,6 +46,10 @@ var initApp = function (db) {
             
             // check the url parameters and set the query filters
             
+            if (request.query.category) {
+                filters.categories = request.query.category;
+            }
+            
             if (!isNaN(request.query.minPrice)) {
                 filters.price = filters.price || {};
                 filters.price.$gte = parseFloat(request.query.minPrice);

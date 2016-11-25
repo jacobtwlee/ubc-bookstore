@@ -14,9 +14,15 @@ var productsUrl = "/products";
 
 // Make an AJAX request to the server to get the product data
 // Returns a promise which the caller can use to get the product data when ready
-function loadProductData (url) {
+function loadProductData (url, category) {
     return new Promise (function (resolve, reject) {
-        var authUrl = url + "?token=" + authToken;
+        if (category) {
+            category = "&category=" + category;
+        } else {
+            category = "";
+        }
+        
+        var authUrl = url + "?token=" + authToken + category;
         var xhr = new XMLHttpRequest();
         var maxAttempts = 5;
         var attempts = 0;
@@ -256,17 +262,22 @@ function checkout() {
     xhr.send(JSON.stringify(payload));
 }
 
-// Initialize cart and product features
-(function setup() {    
+// Load all products of a given category from the server
+// If category is not set then all products will be loaded
+function loadProducts(category) {
+    // Clear all existing products before showing new ones
     var $products = $("#productList");
+    $("#productList").empty();
     
     // Make the request to the server to get the product data
-    loadProductData(productsUrl).then(function (productData) {
+    loadProductData(productsUrl, category).then(function (productData) {
         for (var product in productData) {
-            // Initialize the product in our products global variable
-            products[product] = {
-                "quantity": productData[product].quantity,
-                "price": productData[product].price
+            // Only update global products if user hasn't added the item to the cart
+            if (!(product in cart)) {
+                products[product] = {
+                    "quantity": productData[product].quantity,
+                    "price": productData[product].price
+                }    
             }
             
             // Render the product HTML and add it to the DOM
@@ -287,6 +298,16 @@ function checkout() {
         }
     }, function (error) {
         alert(error);
+    });
+}
+
+// Initialize cart and product features
+(function setup() {        
+    loadProducts();
+    
+    // Add the click handlers for the product category buttons
+    $(".categoryButton").on("click", function () {
+        loadProducts($(this).attr("data-category"));
     });
     
     // Add the click handlers for the modal show/hide buttons
