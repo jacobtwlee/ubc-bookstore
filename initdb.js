@@ -80,3 +80,11 @@ for (p in products) {
     products[p].name = p;
     db.products.insert(entry);
 }
+
+// populate the users collection
+db.users.insert([
+    {token: "a8l6Nos5N9"},
+    {token: "PkpIEQlH44"},
+    {token: "00WBE00XXf"},
+    {token: "v3gEKNMZys"}
+]);

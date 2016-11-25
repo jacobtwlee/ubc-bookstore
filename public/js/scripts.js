@@ -9,12 +9,14 @@
 var cart = {}
 var products = {}
 var inactiveTime = 0;
-var apiUrl = "/products";
+var authToken = "a8l6Nos5N9";
+var productsUrl = "/products";
 
 // Make an AJAX request to the server to get the product data
 // Returns a promise which the caller can use to get the product data when ready
 function loadProductData (url) {
     return new Promise (function (resolve, reject) {
+        var authUrl = url + "?token=" + authToken;
         var xhr = new XMLHttpRequest();
         var maxAttempts = 5;
         var attempts = 0;
@@ -23,7 +25,7 @@ function loadProductData (url) {
             if (attempts < maxAttempts) {
                 attempts += 1;
                 xhr.timeout = 5000;
-                xhr.open("GET", url);
+                xhr.open("GET", authUrl);
                 xhr.send();
             } else {
                 reject("Failed to retrieve products after " + attempts + " attempts.");
@@ -247,7 +249,8 @@ function checkout() {
     
     var payload = {
         cart: cart,
-        total: getCartPrice()
+        total: getCartPrice(),
+        token: authToken
     }
     
     xhr.send(JSON.stringify(payload));
@@ -258,7 +261,7 @@ function checkout() {
     var $products = $("#productList");
     
     // Make the request to the server to get the product data
-    loadProductData(apiUrl).then(function (productData) {
+    loadProductData(productsUrl).then(function (productData) {
         for (var product in productData) {
             // Initialize the product in our products global variable
             products[product] = {

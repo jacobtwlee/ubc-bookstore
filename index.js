@@ -11,88 +11,113 @@ var dburl = "mongodb://localhost:27017/cpen400a_group12";
 
 var initApp = function (db) {
     
+    // Make sure user token is valid, and if it is then execute the callback
+    var validateUserAuth = function (request, response, callback) {
+        var token = request.body.token || request.query.token;
+        
+        if (token) {
+            var users = db.collection('users');
+            
+            users.findOne({"token": token}, function (error, result) {
+                if (error || !result) {
+                    response.status(401).send("Unauthorized.");
+                } else {
+                    callback();
+                }
+            });
+        } else {
+            response.status(401).send("Unauthorized.");
+        }
+    };
+    
+    // Start server listening
     app.listen(app.get('port'), function() {
       console.log("Node app is running at localhost:" + app.get('port'));
     });
     
+    // Products GET endpoint
     app.get('/products', function(request, response) {
-        response.header("Access-Control-Allow-Origin", "*");
-        response.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-        
-        // get the products collection
-        var collection = db.collection('products');
-        
-        var filters = {};
-        
-        // check the url parameters and set the query filters
-        
-        if (!isNaN(request.query.minPrice)) {
-            filters.price = filters.price || {};
-            filters.price.$gte = parseFloat(request.query.minPrice);
-        }
-        
-        if (!isNaN(request.query.maxPrice)) {
-            filters.price = filters.price || {};
-            filters.price.$lte = parseFloat(request.query.maxPrice);
-        }
+        // check if the user is valid before handling the request
+        validateUserAuth(request, response, function () {
+            // get the products collection
+            var collection = db.collection('products');
             
-        // find the matching products
-        collection.find(filters).toArray(function(error, result) {
-            if (error) {
-                console.log("Error: could not retrieve products.")
-                response.status(500).send("An error occurred, please try again");
-            } else {
-                var products = {};
-                
-                for (var i = 0; i < result.length; i++) {
-                    var name = result[i].name;
-                    
-                    products[name] = {
-                        "price": result[i].price,
-                        "quantity": result[i].quantity,
-                        "url": result[i].url
-                    }
-                }
-                
-                response.json(products);
+            var filters = {};
+            
+            // check the url parameters and set the query filters
+            
+            if (!isNaN(request.query.minPrice)) {
+                filters.price = filters.price || {};
+                filters.price.$gte = parseFloat(request.query.minPrice);
             }
+            
+            if (!isNaN(request.query.maxPrice)) {
+                filters.price = filters.price || {};
+                filters.price.$lte = parseFloat(request.query.maxPrice);
+            }
+                
+            // find the matching products
+            collection.find(filters).toArray(function(error, result) {
+                if (error) {
+                    console.log("Error: could not retrieve products.")
+                    response.status(500).send("An error occurred, please try again");
+                } else {
+                    var products = {};
+                    
+                    for (var i = 0; i < result.length; i++) {
+                        var name = result[i].name;
+                        
+                        products[name] = {
+                            "price": result[i].price,
+                            "quantity": result[i].quantity,
+                            "url": result[i].url
+                        }
+                    }
+                    
+                    response.json(products);
+                }
+              });
           });
     });
     
+    // Checkout POST endpoint
     app.post('/checkout', function(request, response) {
-        var errorHandler = function () {
-            console.log("Error: could not place order.");
-            response.status(500).send("An error occurred, please try again");
-        }
-        
-        var ordersCollection = db.collection('orders');
-        var productsCollection = db.collection('products');
-
-        var cart = request.body.cart;
-        var total = request.body.total;
-        
-        if (cart && total) {
-            var doc = {
-                cart: cart,
-                total: total
-            };
-            
-            // add the new order to the orders collection
-            ordersCollection.insert(doc, {}, function (error, result) {
-                if (error) errorHandler();
-            });
-            
-            // for each product in cart update the quantity in products collection
-            for (item in cart) {
-                productsCollection.updateOne({name: item}, {$inc: {quantity: -1 * cart[item]}}, function (error, result) {
-                    if (error) errorHandler();
-                });
+        // check if the user is valid before handling the request
+        validateUserAuth(request, response, function () {
+            var errorHandler = function () {
+                console.log("Error: could not place order.");
+                response.status(500).send("An error occurred, please try again");
             }
             
-            response.status(200).send("Checkout successful.");
-        } else {
-            errorHandler();
-        }
+            var ordersCollection = db.collection('orders');
+            var productsCollection = db.collection('products');
+
+            var cart = request.body.cart;
+            var total = request.body.total;
+            
+            if (cart && total) {
+                var doc = {
+                    cart: cart,
+                    total: total
+                };
+                
+                // add the new order to the orders collection
+                ordersCollection.insert(doc, {}, function (error, result) {
+                    if (error) errorHandler();
+                });
+                
+                // for each product in cart update the quantity in products collection
+                for (item in cart) {
+                    productsCollection.updateOne({name: item}, {$inc: {quantity: -1 * cart[item]}}, function (error, result) {
+                        if (error) errorHandler();
+                    });
+                }
+                
+                response.status(200).send("Checkout successful.");
+            } else {
+                errorHandler();
+            }
+        });
     });
 };
 
