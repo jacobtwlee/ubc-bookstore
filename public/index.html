@@ -12,7 +12,7 @@
         <link rel="stylesheet" type="text/css" href="css/styles.css">
     </head>
     <body>
-        <div id="modalContainer">
+        <div id="modalContainer" class="noSelect">
             <div class="modal">
                 <div class="modalContent">
                     <table>
@@ -35,7 +35,7 @@
                 <div class="modalCloseButton">&times;</div>
             </div>
         </div>
-        <div id="showCartButton"><img class="cartIcon" src="images/cart.png"> Cart ($<span class="cartPrice">0</span>)</div>
+        <div id="showCartButton" class="noSelect"><img class="cartIcon" src="images/cart.png"> Cart ($<span class="cartPrice">0</span>)</div>
         
         <div class="tableContainer">
             <div id="header" class="row">
@@ -45,7 +45,7 @@
             
             <div id="mainContent" class="row">
                 <div id="navigationMenu" class="col-left">
-                    <ul>
+                    <ul class="noSelect">
                         <li class="categoryButton">All Items</li>
                         <li class="categoryButton" data-category="books">Books</li>
                         <li class="categoryButton" data-category="clothing">Clothing</li>
@@ -55,7 +55,7 @@
                         <li class="categoryButton" data-category="supplies">Supplies</li>
                     </ul>
                 </div>
-                <div id="productList" class="col-right"></div>
+                <div id="productList" class="col-right noSelect"></div>
             </div>
         </div>
         
