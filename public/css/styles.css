@@ -100,6 +100,7 @@ hr {
 /* Products List */
 
 #productList {
+    position: relative;
     padding: 15px;
 }
 
@@ -107,6 +108,14 @@ hr {
     background-image: url('../images/loading.gif');
     background-position: center;
     background-repeat: no-repeat;
+}
+
+.noProducts {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    color: #002145;
+    text-align: center;
 }
 
 .product {

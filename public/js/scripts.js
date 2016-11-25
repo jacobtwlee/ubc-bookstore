@@ -271,6 +271,11 @@ function loadProducts(category) {
     
     // Make the request to the server to get the product data
     loadProductData(productsUrl, category).then(function (productData) {
+        if ($.isEmptyObject(productData)) {
+            var noProductsTemplate = templates.noProducts();
+            $products.append(noProductsTemplate);
+        }
+        
         for (var product in productData) {
             // Only update global products if user hasn't added the item to the cart
             if (!(product in cart)) {
