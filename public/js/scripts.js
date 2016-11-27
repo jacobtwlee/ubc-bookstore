@@ -9,7 +9,7 @@
 var cart = {}
 var products = {}
 var inactiveTime = 0;
-var authToken = "a8l6Nos5N9";
+var authToken = "";
 var productsUrl = "/products";
 
 // Make an AJAX request to the server to get the product data
