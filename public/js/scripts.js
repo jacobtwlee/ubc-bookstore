@@ -9,7 +9,6 @@
 var cart = {}
 var products = {}
 var inactiveTime = 0;
-var authToken = "";
 var productsUrl = "/products";
 
 // Make an AJAX request to the server to get the product data
@@ -22,7 +21,7 @@ function loadProductData (url, category) {
             category = "";
         }
         
-        var authUrl = url + "?token=" + authToken + category;
+        var authUrl = url + "?token=" + sessionStorage.getItem("authToken") + category;
         var xhr = new XMLHttpRequest();
         var maxAttempts = 5;
         var attempts = 0;
@@ -256,7 +255,7 @@ function checkout() {
     var payload = {
         cart: cart,
         total: getCartPrice(),
-        token: authToken
+        token: sessionStorage.getItem("authToken")
     }
     
     xhr.send(JSON.stringify(payload));
@@ -308,6 +307,11 @@ function loadProducts(category) {
 
 // Prompt the user to authenticate
 function initAuth(callback) {
+    if (sessionStorage.getItem("authToken")) {
+        callback();
+        return;
+    }
+    
     var username = prompt("Enter your username:");
     
     var url = "/authenticate";
@@ -326,7 +330,7 @@ function initAuth(callback) {
         if (xhr.status == 200) {
             try {
                 var response = JSON.parse(xhr.responseText);
-                authToken = response.token;
+                sessionStorage.setItem("authToken", response.token);
                 callback();
             } catch (e) {
                errorHandler();
