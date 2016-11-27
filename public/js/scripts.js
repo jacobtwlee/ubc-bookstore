@@ -306,27 +306,66 @@ function loadProducts(category) {
     });
 }
 
+// Prompt the user to authenticate
+function initAuth(callback) {
+    var username = prompt("Enter your username:");
+    
+    var url = "/authenticate";
+    var xhr = new XMLHttpRequest();
+    
+    xhr.timeout = 5000;
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    
+    var errorHandler = function () {
+        alert("Authentication unsuccessful.");
+        initAuth(callback);
+    };
+    
+    xhr.onload = function () {
+        if (xhr.status == 200) {
+            try {
+                var response = JSON.parse(xhr.responseText);
+                authToken = response.token;
+                callback();
+            } catch (e) {
+               errorHandler();
+            }
+        } else {
+            errorHandler();
+        }
+    }
+    
+    xhr.onerror = errorHandler;
+    xhr.onabort = errorHandler;
+    xhr.ontimeout = errorHandler;
+    
+    xhr.send(JSON.stringify({"username": username}));
+}
+
 // Initialize cart and product features
-(function setup() {        
-    loadProducts();
-    
-    // Add the click handlers for the product category buttons
-    $(".categoryButton").on("click", function () {
-        loadProducts($(this).attr("data-category"));
-    });
-    
-    // Add the click handlers for the modal show/hide buttons
-    $("#showCartButton").on("click", showModal);
-    $("#modalContainer .modalCloseButton").on("click", hideModal);
-    
-    // Add checkout button handler
-    $(".checkoutButton").on("click", checkout);
-    
-    // Add keydown handler for closing the modal with the ESC key
-    $(document).on("keydown", function (e) {
-        if (e.keyCode == 27) hideModal();
-    });
-    
-    // Check/update the timer every second
-    setInterval(checkInactiveTime, 1000);
+(function setup() {     
+    initAuth(function () {
+        loadProducts();
+        
+        // Add the click handlers for the product category buttons
+        $(".categoryButton").on("click", function () {
+            loadProducts($(this).attr("data-category"));
+        });
+        
+        // Add the click handlers for the modal show/hide buttons
+        $("#showCartButton").on("click", showModal);
+        $("#modalContainer .modalCloseButton").on("click", hideModal);
+        
+        // Add checkout button handler
+        $(".checkoutButton").on("click", checkout);
+        
+        // Add keydown handler for closing the modal with the ESC key
+        $(document).on("keydown", function (e) {
+            if (e.keyCode == 27) hideModal();
+        });
+        
+        // Check/update the timer every second
+        setInterval(checkInactiveTime, 1000);
+    }); 
 })();

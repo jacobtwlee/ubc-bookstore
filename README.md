@@ -21,3 +21,11 @@
   ```
 
 The application should now be running at [localhost:5000](http://localhost:5000/).
+
+**NOTE:**
+In order to access the application a valid username is required to authenticate.
+The following usernames are valid (case sensitive):
+- jacob
+- bernadette
+- xueqin
+- abraham

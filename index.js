@@ -35,6 +35,24 @@ var initApp = function (db) {
       console.log("Node app is running at localhost:" + app.get('port'));
     });
     
+    // Authenticate POST endpoint
+    app.post('/authenticate', function(request, response) {
+        var users = db.collection('users');
+        var username = request.body.username;
+        
+        if (username) {
+            users.findOne({"username": username}, function (error, result) {
+                if (error || !result) {
+                    response.status(401).send("Failed to authentiate.");
+                } else {
+                    response.json({token: result.token});
+                }
+            });
+        } else {
+            response.status(401).send("Failed to authentiate.");
+        }
+    });
+    
     // Products GET endpoint
     app.get('/products', function(request, response) {
         // check if the user is valid before handling the request

@@ -1,3 +1,41 @@
+/*
+This script creates a populates all the necessary collections that are used by
+the application. Note that the running the script will overwrite all existing
+contents of the relevant collections, so the script can be used to restore the
+database to its initial state.
+
+Example documents for each collection:
+
+    products
+    {
+      "_id" : ObjectId("564523c89a9b1a2a4ae35ebe"),
+      "name" : "Mice",
+      "price" : 7,
+      "quantity" : 4,
+      "image" : "/images/products/Mice.png",
+      "categories" : ["tech", "gifts"]
+    }
+
+    orders
+    {
+      "_id" : ObjectId("f40f3qjfasdfsafssasaadf2"),
+      "cart" : {
+        "Mice" : 2,
+        "Jeans" : 1
+        }
+      },
+      "total" : 117
+    }
+
+    users
+    {
+      "_id" : ObjectId("2fewj90fjadkslsdkfnaldfa"),
+      "username" : "jacob",
+      "token" : "a8l6Nos5N9"
+    }
+    
+*/
+
 conn = new Mongo();
 db = conn.getDB("cpen400a_group12");
 
@@ -95,8 +133,20 @@ for (p in products) {
 
 // populate the users collection
 db.users.insert([
-    {token: "a8l6Nos5N9"},
-    {token: "PkpIEQlH44"},
-    {token: "00WBE00XXf"},
-    {token: "v3gEKNMZys"}
+    {
+        username: "jacob",
+        token: "a8l6Nos5N9"
+    },
+    {
+        username: "bernadette",
+        token: "PkpIEQlH44"
+    },
+    {
+        username: "xueqin",
+        token: "00WBE00XXf"
+    },
+    {
+        username: "abraham",
+        token: "v3gEKNMZys"
+    }
 ]);
