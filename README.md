@@ -2,20 +2,25 @@
 
 ## Running Locally
 
-1. Make sure you have [Node.js](http://nodejs.org/) installed.
-2. Install dependencies:
+1. Make sure you have [Node.js](http://nodejs.org/) and [MongoDB](https://www.mongodb.com/) installed.
+
+2. Install the application dependencies:
   ```sh
   npm install
   ```
+3. Start the Mongo server (if it is not already running):
+    ```sh
+    sudo mongod
+    ```
 
-3. Initialize the Mongo database:
+4. Initialize the Mongo database:
   ```sh
   mongo
   > load("initdb.js")
   ```
   This step can be repeated at any time to reset the database to it's initial state.
 
-4. Start the server:
+5. Start the application web server:
   ```sh
   npm start
   ```
