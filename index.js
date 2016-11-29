@@ -71,11 +71,21 @@ var initApp = function (db) {
             if (!isNaN(request.query.minPrice)) {
                 filters.price = filters.price || {};
                 filters.price.$gte = parseFloat(request.query.minPrice);
+            } else {
+                if (request.query.minPrice != undefined) {
+                    response.status(400).send("Invalid value for parameter minPrice.");
+                    return;
+                }
             }
             
             if (!isNaN(request.query.maxPrice)) {
                 filters.price = filters.price || {};
                 filters.price.$lte = parseFloat(request.query.maxPrice);
+            } else {
+                if (request.query.maxPrice != undefined) {
+                    response.status(400).send("Invalid value for parameter maxPrice.");
+                    return;
+                }
             }
                 
             // find the matching products
@@ -106,38 +116,38 @@ var initApp = function (db) {
     app.post('/checkout', function(request, response) {
         // check if the user is valid before handling the request
         validateUserAuth(request, response, function () {
-            var errorHandler = function () {
-                console.log("Error: could not place order.");
-                response.status(500).send("An error occurred, please try again");
-            }
-            
             var ordersCollection = db.collection('orders');
             var productsCollection = db.collection('products');
 
             var cart = request.body.cart;
             var total = request.body.total;
             
-            if (cart && total) {
-                var doc = {
-                    cart: cart,
-                    total: total
-                };
-                
-                // add the new order to the orders collection
-                ordersCollection.insert(doc, {}, function (error, result) {
-                    if (error) errorHandler();
-                });
-                
-                // for each product in cart update the quantity in products collection
-                for (item in cart) {
-                    productsCollection.updateOne({name: item}, {$inc: {quantity: -1 * cart[item]}}, function (error, result) {
-                        if (error) errorHandler();
+            try {
+                if (cart && total) {
+                    var doc = {
+                        cart: cart,
+                        total: total
+                    };
+                    
+                    // add the new order to the orders collection
+                    ordersCollection.insert(doc, {}, function (error, result) {
+                        if (error) throw new Error("Error inserting into orders collection");
                     });
+                    
+                    // for each product in cart update the quantity in products collection
+                    for (item in cart) {
+                        productsCollection.updateOne({name: item}, {$inc: {quantity: -1 * cart[item]}}, function (error, result) {
+                            if (error) throw new Error("Error updating products collection");
+                        });
+                    }
+                    
+                    response.status(200).send("Checkout successful.");
+                } else {
+                    throw new Error("Error: a required parameter is missing");
                 }
-                
-                response.status(200).send("Checkout successful.");
-            } else {
-                errorHandler();
+            } catch (e) {
+                console.log(e);
+                response.status(500).send("An error occurred, please try again");
             }
         });
     });
