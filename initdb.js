@@ -24,7 +24,7 @@ Example documents for each collection:
         "Jeans" : 1
         }
       },
-      "total" : 117
+      "total" : 50
     }
 
     users
@@ -130,6 +130,15 @@ for (p in products) {
     products[p].name = p;
     db.products.insert(entry);
 }
+
+// add an example document to the orders collection
+db.orders.insert({
+    "cart" : {
+        "Mice" : 2,
+        "Jeans" : 1
+    },
+    "total" : 50
+});
 
 // populate the users collection
 db.users.insert([
