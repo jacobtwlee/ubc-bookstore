@@ -11,6 +11,18 @@ var dburl = "mongodb://localhost:27017/cpen400a_group12";
 
 var initApp = function (db) {
     
+    var sendResponse = function (response, status, message, content) {
+        if (!content) {
+            content = {};
+        }
+        
+        response.status(status).json({
+            "status": status,
+            "message": message,
+            "content": content
+        });
+    }
+    
     // Make sure user token is valid, and if it is then execute the callback
     var validateUserAuth = function (request, response, callback) {
         var token = request.body.token || request.query.token;
@@ -20,13 +32,13 @@ var initApp = function (db) {
             
             users.findOne({"token": token}, function (error, result) {
                 if (error || !result) {
-                    response.status(401).send("Unauthorized.");
+                    sendResponse(response, 401, "Unauthorized.");
                 } else {
                     callback();
                 }
             });
         } else {
-            response.status(401).send("Unauthorized.");
+            sendResponse(response, 401, "Unauthorized.");
         }
     };
     
@@ -43,13 +55,13 @@ var initApp = function (db) {
         if (username) {
             users.findOne({"username": username}, function (error, result) {
                 if (error || !result) {
-                    response.status(401).send("Failed to authentiate.");
+                    sendResponse(response, 401, "Failed to authenticate.");
                 } else {
-                    response.json({token: result.token});
+                    sendResponse(response, 200, "Authentication successful.", {token: result.token});
                 }
             });
         } else {
-            response.status(401).send("Failed to authentiate.");
+            sendResponse(response, 401, "Failed to authenticate.");
         }
     });
     
@@ -73,7 +85,7 @@ var initApp = function (db) {
                 filters.price.$gte = parseFloat(request.query.minPrice);
             } else {
                 if (request.query.minPrice != undefined) {
-                    response.status(400).send("Invalid value for parameter minPrice.");
+                    sendResponse(response, 400, "Invalid value for parameter minPrice.");
                     return;
                 }
             }
@@ -83,7 +95,7 @@ var initApp = function (db) {
                 filters.price.$lte = parseFloat(request.query.maxPrice);
             } else {
                 if (request.query.maxPrice != undefined) {
-                    response.status(400).send("Invalid value for parameter maxPrice.");
+                    sendResponse(response, 400, "Invalid value for parameter maxPrice.");
                     return;
                 }
             }
@@ -92,7 +104,7 @@ var initApp = function (db) {
             collection.find(filters).toArray(function(error, result) {
                 if (error) {
                     console.log("Error: could not retrieve products.")
-                    response.status(500).send("An error occurred, please try again");
+                    sendResponse(response, 500, "An error occurred, please try again.");
                 } else {
                     var products = {};
                     
@@ -106,7 +118,7 @@ var initApp = function (db) {
                         }
                     }
                     
-                    response.json(products);
+                    sendResponse(response, 200, "Successfully retrieved products.", products);
                 }
               });
           });
@@ -131,23 +143,24 @@ var initApp = function (db) {
                     
                     // add the new order to the orders collection
                     ordersCollection.insert(doc, {}, function (error, result) {
-                        if (error) throw new Error("Error inserting into orders collection");
+                        if (error) throw new Error("Error inserting into orders collection.");
                     });
                     
                     // for each product in cart update the quantity in products collection
                     for (item in cart) {
                         productsCollection.updateOne({name: item}, {$inc: {quantity: -1 * cart[item]}}, function (error, result) {
-                            if (error) throw new Error("Error updating products collection");
+                            if (error) throw new Error("Error updating products collection.");
                         });
                     }
                     
-                    response.status(200).send("Checkout successful.");
+                    // success
+                    sendResponse(response, 200, "Checkout successful.");
                 } else {
-                    throw new Error("Error: a required parameter is missing");
+                    throw new Error("A required parameter is missing.");
                 }
             } catch (e) {
                 console.log(e);
-                response.status(500).send("An error occurred, please try again");
+                sendResponse(response, 500, e.message);
             }
         });
     });

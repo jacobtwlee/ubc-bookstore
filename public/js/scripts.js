@@ -40,8 +40,8 @@ function loadProductData (url, category) {
         xhr.onload = function () {
             if (xhr.status == 200) {
                 try {
-                    var productData = JSON.parse(xhr.responseText);
-                    resolve(productData);
+                    var responseData = JSON.parse(xhr.responseText);
+                    resolve(responseData.content);
                 } catch (e) {
                    console.log("Error parsing JSON response");
                    tryRequest();
@@ -330,7 +330,7 @@ function initAuth(callback) {
         if (xhr.status == 200) {
             try {
                 var response = JSON.parse(xhr.responseText);
-                sessionStorage.setItem("authToken", response.token);
+                sessionStorage.setItem("authToken", response.content.token);
                 callback();
             } catch (e) {
                errorHandler();
