@@ -18,7 +18,7 @@
   mongo
   > load("initdb.js")
   ```
-  This step can be repeated at any time to reset the database to it's initial state.
+  This step can be repeated at any time to reset the database to its initial state.
 
 5. Start the application web server:
   ```sh

@@ -11,6 +11,7 @@ var dburl = "mongodb://localhost:27017/cpen400a_group12";
 
 var initApp = function (db) {
     
+    // Helper to send a response and ensure a consistent response format
     var sendResponse = function (response, status, message, content) {
         if (!content) {
             content = {};
