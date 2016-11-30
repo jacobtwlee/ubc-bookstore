@@ -9,12 +9,19 @@
 var cart = {}
 var products = {}
 var inactiveTime = 0;
-var apiUrl = "https://cpen400a.herokuapp.com/products";
+var productsUrl = "/products";
 
 // Make an AJAX request to the server to get the product data
 // Returns a promise which the caller can use to get the product data when ready
-function loadProductData (url) {
+function loadProductData (url, category) {
     return new Promise (function (resolve, reject) {
+        if (category) {
+            category = "&category=" + category;
+        } else {
+            category = "";
+        }
+        
+        var authUrl = url + "?token=" + sessionStorage.getItem("authToken") + category;
         var xhr = new XMLHttpRequest();
         var maxAttempts = 5;
         var attempts = 0;
@@ -23,7 +30,7 @@ function loadProductData (url) {
             if (attempts < maxAttempts) {
                 attempts += 1;
                 xhr.timeout = 5000;
-                xhr.open("GET", url);
+                xhr.open("GET", authUrl);
                 xhr.send();
             } else {
                 reject("Failed to retrieve products after " + attempts + " attempts.");
@@ -33,8 +40,8 @@ function loadProductData (url) {
         xhr.onload = function () {
             if (xhr.status == 200) {
                 try {
-                    var productData = JSON.parse(xhr.responseText);
-                    resolve(productData);
+                    var responseData = JSON.parse(xhr.responseText);
+                    resolve(responseData.content);
                 } catch (e) {
                    console.log("Error parsing JSON response");
                    tryRequest();
@@ -201,81 +208,80 @@ function updateCartModal(productName) {
 
 // Handle checkout logic
 function checkout() {
-    $this = $(this);
+    var $this = $(this);
+    
+    // disable the checkout button until the request completes to prevent
+    // placing the order multiple times
     $this.addClass("disabled");
     
-    loadProductData(apiUrl).then(function (productData) {
-        var priceChanges = [];
-        var quantityChanges = [];
+    var url = "/checkout";
+    var xhr = new XMLHttpRequest();
+    
+    xhr.timeout = 5000;
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    
+    function successHandler() {
+        $this.removeClass("disabled");
+        alert("Checkout complete!");
         
-        var confirmMessage = "";
-        var priceChangeMessage = "The price of the following items has changed:\n";
-        var quantityChangeMessage = "Some items in your cart are no longer available in the quantity selected. The following items have been updated in your cart:\n";
-        
-        for (var product in productData) {            
-            // the price changed
-            if (productData[product].price != products[product].price) {
-                if (product in cart) {
-                    priceChanges.push(product);
-                    priceChangeMessage += "- " + product + ": $" + productData[product].price + "\n"
-                }
-                products[product].price = productData[product].price;
-            }
-            
-            // the quanity changed
-            if (productData[product].quantity < cart[product]) {
-                if (product in cart) {
-                    quantityChanges.push(product);
-                    quantityChangeMessage += "- " + product + ": " + productData[product].quantity + "\n";
-                    cart[product] = productData[product].quantity;
-                }
-                
-                products[product].quantity = productData[product].quantity;
-            }
-            
-            updateProduct(product);
-            updateCartModal(product);
+        // after checkout we remove all items from the user's cart
+        for (item in cart) {
+            delete cart[item];            
+            updateProduct(item);
+            updateCartModal(item);
         }
         
         updateCartPrice();
-                    
-        if (priceChanges.length > 0) {
-            confirmMessage += priceChangeMessage + "\n";
-        }
-        
-        if (quantityChanges.length > 0) {
-            confirmMessage += quantityChangeMessage + "\n";
-        }
-        
-        var cartPrice = getCartPrice();
-        
-        if (cartPrice > 0) {
-            var totalPriceMessage = "The cart total is $" + cartPrice + ". Do you want to continue checkout?";
-            confirmMessage += totalPriceMessage;
-        }
-        
-        confirm(confirmMessage);
-        
-        if (!$.isEmptyObject(cart)) {
-            $this.removeClass("disabled");
-        }
-    }, function (error) {
-        alert(error);
+        hideModal();
+    }
+    
+    function errorHandler() {
         $this.removeClass("disabled");
-    });
+        alert("There was an error during checkout. Please try again.");
+    }
+    
+    xhr.onload = function () {
+        if (xhr.status == 200) {
+            successHandler();
+        } else {
+            errorHandler();
+        }
+    };
+
+    xhr.onerror = errorHandler;
+    xhr.ontimeout = errorHandler;
+    
+    var payload = {
+        cart: cart,
+        total: getCartPrice(),
+        token: sessionStorage.getItem("authToken")
+    }
+    
+    xhr.send(JSON.stringify(payload));
 }
 
-// Initialize cart and product features
-(function setup() {    
+// Load all products of a given category from the server
+// If category is not set then all products will be loaded
+function loadProducts(category) {
+    // Clear all existing products before showing new ones
     var $products = $("#productList");
+    $("#productList").empty();
     
     // Make the request to the server to get the product data
-    loadProductData(apiUrl).then(function (productData) {
+    loadProductData(productsUrl, category).then(function (productData) {
+        if ($.isEmptyObject(productData)) {
+            var noProductsTemplate = templates.noProducts();
+            $products.append(noProductsTemplate);
+        }
+        
         for (var product in productData) {
-            // Initialize the product in our products global variable
-            products[product] = {
-                "quantity": productData[product].quantity,
-                "price": productData[product].price
+            // Only update global products if user hasn't added the item to the cart
+            if (!(product in cart)) {
+                products[product] = {
+                    "quantity": productData[product].quantity,
+                    "price": productData[product].price
+                }    
             }
             
             // Render the product HTML and add it to the DOM
@@ -297,19 +303,73 @@ function checkout() {
     }, function (error) {
         alert(error);
     });
+}
+
+// Prompt the user to authenticate
+function initAuth(callback) {
+    if (sessionStorage.getItem("authToken")) {
+        callback();
+        return;
+    }
     
-    // Add the click handlers for the modal show/hide buttons
-    $("#showCartButton").on("click", showModal);
-    $("#modalContainer .modalCloseButton").on("click", hideModal);
+    var username = prompt("Enter your username:");
     
-    // Add checkout button handler
-    $(".checkoutButton").on("click", checkout);
+    var url = "/authenticate";
+    var xhr = new XMLHttpRequest();
     
-    // Add keydown handler for closing the modal with the ESC key
-    $(document).on("keydown", function (e) {
-        if (e.keyCode == 27) hideModal();
-    });
+    xhr.timeout = 5000;
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     
-    // Check/update the timer every second
-    setInterval(checkInactiveTime, 1000);
+    var errorHandler = function () {
+        alert("Authentication unsuccessful.");
+        initAuth(callback);
+    };
+    
+    xhr.onload = function () {
+        if (xhr.status == 200) {
+            try {
+                var response = JSON.parse(xhr.responseText);
+                sessionStorage.setItem("authToken", response.content.token);
+                callback();
+            } catch (e) {
+               errorHandler();
+            }
+        } else {
+            errorHandler();
+        }
+    }
+    
+    xhr.onerror = errorHandler;
+    xhr.onabort = errorHandler;
+    xhr.ontimeout = errorHandler;
+    
+    xhr.send(JSON.stringify({"username": username}));
+}
+
+// Initialize cart and product features
+(function setup() {     
+    initAuth(function () {
+        loadProducts();
+        
+        // Add the click handlers for the product category buttons
+        $(".categoryButton").on("click", function () {
+            loadProducts($(this).attr("data-category"));
+        });
+        
+        // Add the click handlers for the modal show/hide buttons
+        $("#showCartButton").on("click", showModal);
+        $("#modalContainer .modalCloseButton").on("click", hideModal);
+        
+        // Add checkout button handler
+        $(".checkoutButton").on("click", checkout);
+        
+        // Add keydown handler for closing the modal with the ESC key
+        $(document).on("keydown", function (e) {
+            if (e.keyCode == 27) hideModal();
+        });
+        
+        // Check/update the timer every second
+        setInterval(checkInactiveTime, 1000);
+    }); 
 })();

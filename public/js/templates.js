@@ -95,4 +95,13 @@ var templates = {
 
         return tableRow;
     },
+    
+    noProducts: function () {
+        var div = document.createElement("div");
+        div.setAttribute("class", "noProducts");
+        var text = document.createTextNode("No matching products were found.");
+        div.appendChild(text);
+        
+        return div;
+    }
 };
