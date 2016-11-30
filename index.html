@@ -4,10 +4,8 @@
 
         <!-- 3rd party libraries -->
         <script src="js/lib/jquery-3.1.1.min.js" type="text/javascript"></script>
-        <script src="js/lib/underscore-min.js" type="text/javascript"></script>
         
         <!-- Assignment scripts -->
-        <script src="js/data.js" type="text/javascript"></script>
         <script src="js/templates.js" type="text/javascript"></script>
         <script src="js/scripts.js" type="text/javascript" defer></script>
 
@@ -32,30 +30,33 @@
                             <td class="cartSubtotal">Subtotal: $<span class="cartPrice">0</span></td>
                         </tr>
                     </table>
-                    <div class="checkoutButton">Checkout</div>
+                    <div class="checkoutButton disabled">Checkout</div>
                 </div>
                 <div class="modalCloseButton">&times;</div>
             </div>
         </div>
         <div id="showCartButton"><img class="cartIcon" src="images/cart.png"> Cart ($<span class="cartPrice">0</span>)</div>
-        <div id="header" class="row">
-            <div id="logo" class="col-left"></div>
-            <div id="welcomeBanner" class="col-right"></div>
-        </div>
         
-        <div id="mainContent" class="row">
-            <div id="navigationMenu" class="col-left">
-                <ul>
-                    <li>All Items</li>
-                    <li>Books</li>
-                    <li>Clothing</li>
-                    <li>Tech</li>
-                    <li>Gifts</li>
-                    <li>Stationary</li>
-                    <li>Supplies</li>
-                </ul>
+        <div class="tableContainer">
+            <div id="header" class="row">
+                <div id="logo" class="col-left"></div>
+                <div id="welcomeBanner" class="col-right"></div>
             </div>
-            <div id="productList" class="col-right"></div>
+            
+            <div id="mainContent" class="row">
+                <div id="navigationMenu" class="col-left">
+                    <ul>
+                        <li>All Items</li>
+                        <li>Books</li>
+                        <li>Clothing</li>
+                        <li>Tech</li>
+                        <li>Gifts</li>
+                        <li>Stationary</li>
+                        <li>Supplies</li>
+                    </ul>
+                </div>
+                <div id="productList" class="col-right"></div>
+            </div>
         </div>
         
         <div id="footer">

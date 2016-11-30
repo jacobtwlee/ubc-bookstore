@@ -9,6 +9,48 @@
 var cart = {}
 var products = {}
 var inactiveTime = 0;
+var apiUrl = "https://cpen400a.herokuapp.com/products";
+
+// Make an AJAX request to the server to get the product data
+// Returns a promise which the caller can use to get the product data when ready
+function loadProductData (url) {
+    return new Promise (function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        var maxAttempts = 5;
+        var attempts = 0;
+        
+        var tryRequest = function () {
+            if (attempts < maxAttempts) {
+                attempts += 1;
+                xhr.timeout = 5000;
+                xhr.open("GET", url);
+                xhr.send();
+            } else {
+                reject("Failed to retrieve products after " + attempts + " attempts.");
+            }
+        };
+        
+        xhr.onload = function () {
+            if (xhr.status == 200) {
+                try {
+                    var productData = JSON.parse(xhr.responseText);
+                    resolve(productData);
+                } catch (e) {
+                   console.log("Error parsing JSON response");
+                   tryRequest();
+                }
+            } else {
+                tryRequest();
+            }
+        };
+
+        xhr.onerror = tryRequest;
+        xhr.ontimeout = tryRequest;
+        
+        // Start the first request
+        tryRequest();
+    });
+}
 
 // Adds a product to the global cart and adjusts its quantity in the global products
 function addToCart(productName) {
@@ -50,6 +92,19 @@ function removeFromCart(productName) {
     }
 }
 
+// Update the product DOM element in the products list
+function updateProduct(productName) {
+    var $el = $('.product[data-product="' + productName + '"]');
+    
+    $el.find(".productPrice").text("$" + products[productName].price);
+    
+    if (cart[productName] && cart[productName] > 0) {
+        $el.find(".cartButton.remove").show();
+    } else {
+        $el.find(".cartButton.remove").hide();
+    }
+}
+
 // Checks the current inactive time and display a message to the user if they exceed the timeout
 function checkInactiveTime() {
     var timeout = 300;
@@ -72,8 +127,14 @@ function setInactiveTime(time) {
     $("#inactiveTime").text(time);
 }
 
-// Calculate and set the total dollar amount of products in the cart
+// Update the total dollar amount of products in the cart
 function updateCartPrice() {
+    // update all price DOM elements
+    $(".cartPrice").text(getCartPrice());
+}
+
+// Get the current cart price
+function getCartPrice() {
     var cost = 0;
     
     // calculate cost of iterms in cart
@@ -81,8 +142,7 @@ function updateCartPrice() {
         cost += cart[product] * products[product].price;
     }
     
-    // update all price DOM elements
-    $(".cartPrice").text(cost);
+    return cost;
 }
 
 // Show the modal with the cart contents
@@ -103,14 +163,15 @@ function updateCartModal(productName) {
     var productPrice = cart[productName] * products[productName].price;
     
     if ($tableEntry.length > 0) {
-        if (cart[productName]) {
+        if (cart[productName] && cart[productName] > 0) {
             // Update the quantity
             $tableEntry.find(".cartQuantity").text(cart[productName]);
             
             // Update the price
             $tableEntry.find(".productTotal").text(productPrice);
         } else {
-            // Item doesn't exist in cart, so remove the cart element
+            // Item doesn't/shouldn't exist in cart, so remove the cart element
+            delete cart[productName];
             $tableEntry.remove();
         }
     } else {
@@ -130,41 +191,121 @@ function updateCartModal(productName) {
         $tableEntry.find(".modalCartButton.add").on("click", addToCart.bind(null, productName));
         $tableEntry.find(".modalCartButton.remove").on("click", removeFromCart.bind(null, productName));
     }
+    
+    if ($.isEmptyObject(cart)) {
+        $(".checkoutButton").addClass("disabled");
+    } else {
+        $(".checkoutButton").removeClass("disabled");
+    }
+}
+
+// Handle checkout logic
+function checkout() {
+    $this = $(this);
+    $this.addClass("disabled");
+    
+    loadProductData(apiUrl).then(function (productData) {
+        var priceChanges = [];
+        var quantityChanges = [];
+        
+        var confirmMessage = "";
+        var priceChangeMessage = "The price of the following items has changed:\n";
+        var quantityChangeMessage = "Some items in your cart are no longer available in the quantity selected. The following items have been updated in your cart:\n";
+        
+        for (var product in productData) {            
+            // the price changed
+            if (productData[product].price != products[product].price) {
+                if (product in cart) {
+                    priceChanges.push(product);
+                    priceChangeMessage += "- " + product + ": $" + productData[product].price + "\n"
+                }
+                products[product].price = productData[product].price;
+            }
+            
+            // the quanity changed
+            if (productData[product].quantity < cart[product]) {
+                if (product in cart) {
+                    quantityChanges.push(product);
+                    quantityChangeMessage += "- " + product + ": " + productData[product].quantity + "\n";
+                    cart[product] = productData[product].quantity;
+                }
+                
+                products[product].quantity = productData[product].quantity;
+            }
+            
+            updateProduct(product);
+            updateCartModal(product);
+        }
+        
+        updateCartPrice();
+                    
+        if (priceChanges.length > 0) {
+            confirmMessage += priceChangeMessage + "\n";
+        }
+        
+        if (quantityChanges.length > 0) {
+            confirmMessage += quantityChangeMessage + "\n";
+        }
+        
+        var cartPrice = getCartPrice();
+        
+        if (cartPrice > 0) {
+            var totalPriceMessage = "The cart total is $" + cartPrice + ". Do you want to continue checkout?";
+            confirmMessage += totalPriceMessage;
+        }
+        
+        confirm(confirmMessage);
+        
+        if (!$.isEmptyObject(cart)) {
+            $this.removeClass("disabled");
+        }
+    }, function (error) {
+        alert(error);
+        $this.removeClass("disabled");
+    });
 }
 
 // Initialize cart and product features
 (function setup() {    
     var $products = $("#productList");
     
-    for (var product in productData) {
-        // Initialize the product in our products global variable
-        products[product] = {
-            "quantity": productData[product].quantity,
-            "price": productData[product].price
+    // Make the request to the server to get the product data
+    loadProductData(apiUrl).then(function (productData) {
+        for (var product in productData) {
+            // Initialize the product in our products global variable
+            products[product] = {
+                "quantity": productData[product].quantity,
+                "price": productData[product].price
+            }
+            
+            // Render the product HTML and add it to the DOM
+            var productTemplate = templates.product({
+                productName: product,
+                productPrice: productData[product].price,
+                productImage: productData[product].url
+            });
+            
+            var $product = $(productTemplate).appendTo($products);
+            
+            // Add the click handlers for the add/remove buttons
+            $product.find(".cartButton.add").on("click", addToCart.bind(null, product));
+            $product.find(".cartButton.remove").on("click", removeFromCart.bind(null, product));
+            
+            // We initially hide the remove button until the user adds that item to the cart
+            $product.find(".cartButton.remove").hide();
         }
-        
-        // Render the product HTML and add it to the DOM
-        var productTemplate = templates.product({
-            productName: product,
-            productPrice: productData[product].price,
-            productImage: productData[product].url
-        });
-        
-        var $product = $(productTemplate).appendTo($products);
-        
-        // Add the click handlers for the add/remove buttons
-        $product.find(".cartButton.add").on("click", addToCart.bind(null, product));
-        $product.find(".cartButton.remove").on("click", removeFromCart.bind(null, product));
-        
-        // We initially hide the remove button until the user adds that item to the cart
-        $product.find(".cartButton.remove").hide();
-    }
+    }, function (error) {
+        alert(error);
+    });
     
     // Add the click handlers for the modal show/hide buttons
     $("#showCartButton").on("click", showModal);
     $("#modalContainer .modalCloseButton").on("click", hideModal);
     
-    // Bonus task: add keydown handler for closing the modal with the ESC key
+    // Add checkout button handler
+    $(".checkoutButton").on("click", checkout);
+    
+    // Add keydown handler for closing the modal with the ESC key
     $(document).on("keydown", function (e) {
         if (e.keyCode == 27) hideModal();
     });

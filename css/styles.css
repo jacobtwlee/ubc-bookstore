@@ -14,6 +14,11 @@ hr {
 
 /* Grid System */
 
+.tableContainer {
+    display: table;
+    width: 100%;
+}
+
 .row {
     display: table-row;
 }
@@ -90,12 +95,18 @@ hr {
     padding: 15px;
 }
 
+#productList:empty {
+    background-image: url('../images/loading.gif');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 .product {
     float: left;
     border-radius: 3px;
     width: calc(100%/3);
     padding: 15px 15px 0 15px;
-    box-sizing: border-box
+    box-sizing: border-box;
 }
 
 .productImageContainer {
@@ -332,8 +343,14 @@ hr {
     background-color: #4CAF50;
     cursor: pointer;
     margin-top: 15px;
+    transition: background-color 0.5s;
 }
 
 .checkoutButton:hover {
     background-color: #5DC162;
+}
+
+.checkoutButton.disabled {
+    background-color: #D6D6D6;
+    pointer-events: none;
 }
